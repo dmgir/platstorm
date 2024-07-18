@@ -1,0 +1,341 @@
+<!DOCTYPE html> 
+
+<html>
+
+<head>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+
+</head>
+
+<body>
+
+    <script>
+
+    var config = {
+        type: Phaser.AUTO,
+        width: 1200,
+        height: 700,
+        physics: {
+            default: 'arcade',
+            // arcade: {
+            //  debug: true;
+            //  }
+        },
+
+        scene: {
+            preload: preload,
+            create: create,
+            update: update,
+        }
+
+    }
+
+    class MainCharacter extends Phaser.Physics.Arcade.Sprite
+    {
+        totalJumps = 2;
+        currentJumps = 0;
+        collectedcoins = 0;
+        constructor(scene, x, y, spritesheet, animations)
+        {
+            super(scene, x, y, 'mainCharacter');
+            this.animations = animations;
+            scene.add.existing(this);
+            scene.physics.add.existing(this);
+            this.setScale(2);
+            this.setSize(25, 35, true);
+            this.setCollideWorldBounds(false);
+            this.setGravityY(3000); //We will set gravity *per object* rather than for the scene!
+        }
+    }
+
+    class Coin extends Phaser.Physics.Arcade.Sprite
+    {
+        constructor(scene, x, y)
+        {
+            super(scene, x, y, 'Coins');
+            scene.add.existing(this);
+            scene.physics.add.existing(this);
+            this.setCollideWorldBounds(true);
+            this.setGravityY(1000);
+
+        }
+    }
+ class Ghost extends Phaser.Physics.Arcade.Sprite
+    {
+        constructor(scene, x, y, spritesheet, animation) 
+        {
+            super(scene, x, y, spritesheet, animation);
+            scene.add.existing(this);
+            scene.physics.add.existing(this);
+            this.setScale(0.10);
+            this.play(animation);
+        }
+
+        addTween(scene, xDist, yDist, time) 
+        {
+            scene.tweens.add({ targets: this, x: xDist, y: yDist, duration: time, ease: 'Sine.easeInOut', repeat: -1, yoyo: true });
+        }
+    }
+    var game = new Phaser.Game(config);
+
+    //Game Objects
+    var platforms;
+    var mainCharacter;
+    var scene;
+    var Coins = [];
+    var totalCoins = 12;
+    var Ghosts = [];
+    var totalghost = 3;
+    var score = 0;
+
+    //Keyboard controls
+    var cursors;
+    var keys;
+    var space;
+    var value2 = Phaser.Math.Between(600, 700);
+    var value = Phaser.Math.Between(200, 400);
+    var value3 = Phaser.Math.Between(-100, 0);
+
+
+    var gui2;
+    var gui;
+    var guiTimer;
+
+    function preload()
+    {
+        this.load.image('sky', 'assets/clouds.png');
+        this.load.image('platform', 'assets/platform.png');
+        
+        
+        this.load.atlas('Coins', 'assets/texture1.png', 'assets/texture1.json');
+
+
+        this.load.atlas('Ghosts', 'assets/ghost.png', 'assets/ghost.json')
+
+
+        this.load.atlas('mainCharacter' , 'assets/manim.png' , 'assets/manim.json')
+
+
+        // adding audio soon
+        this.load.audio('coin_sound', 'assets/coin_sound.wav');
+        this.load.audio('win_sound', 'assets/game_win.wav');
+        this.load.audio('jumping_sound', 'assets/jumping.wav');
+        this.load.audio('losing_sound', 'assets/losing.wav');
+
+    }
+
+    function create()
+    {
+        //Set the background origin to be at (0, 0) or top left corner of the image rather than the center of the image asset
+       let background = this.add.tileSprite(0, 0, game.scale.width, game.scale.height, 'sky').setOrigin(0, 0);
+
+       scene = this;
+       // audio
+       this.coin_sound = this.sound.add('coin_sound');
+       this.win_sound = this.sound.add('win_sound');
+       this.jumping_sound = this.sound.add('jumping_sound');
+       this.losing_sound = this.sound.add('losing_sound');
+
+       //making the spin animation for the coins
+       this.anims.create({key: 'coin', frames: this.anims.generateFrameNames('Coins', {prefix: 'coin', end: 7, zeroPad: 1}), repeat: -1});
+       this.anims.create({key: 'ghost', frames: this.anims.generateFrameNames('Ghosts', {prefix: 'ghost', end: 6, zeroPad: 1}), repeat: -1});
+       
+       value2 = Phaser.Math.Between(400, 500);
+     value = Phaser.Math.Between(150, 250);
+     value3 = Phaser.Math.Between(200, 800);
+     value4 = Phaser.Math.Between(200, 800);
+
+
+       //Idle animation for the main character
+
+       let mainCharacterAnimations = {};
+       var idle = this.anims.create({key: 'mainCharacter', frames: this.anims.generateFrameNames('mainCharacter', {prefix: 'adventurer-idle-2-', end: 3, zeroPad: 2}), repeat: -1, frameRate: 10});
+   
+       // var idle = this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNames('slime', {prefix: 'slime_idle', end: 5, zeroPad: 2}), repeat: -1, frameRate: 10});
+       mainCharacterAnimations['idle'] = idle;
+       var left = this.anims.create({key: 'left', frames: this.anims.generateFrameNames('mainCharacter', {prefix: 'adventurer-run-', end: 5, zeroPad: 2}), repeat: -1});
+       mainCharacterAnimations['left'] = left;
+       var right = this.anims.create({key: 'right', frames: this.anims.generateFrameNames('mainCharacter', {prefix: 'adventurer-run-', end: 5, zeroPad: 2}), repeat: -1});
+       mainCharacterAnimations['right'] = right;
+
+       var hop = this.anims.create({key: 'hop', frames: this.anims.generateFrameNames('mainCharacter', {prefix: 'adventurer-jump-', end: 3, zeroPad: 2}), repeat: 0});
+       mainCharacterAnimations['hop'] = hop;
+
+       //Create the platforms and the player character set to collide with the platforms
+       createPlatforms(this);
+       mainCharacter = new MainCharacter(this, value2, value, mainCharacter, mainCharacterAnimations);
+       this.physics.add.collider(mainCharacter, platforms);
+       mainCharacter.play(mainCharacter.animations['idle']);
+
+       //Create the carrot interactables
+       for (var i = 0; i < totalCoins; i++)
+       {
+           let myCoin = new Coin(this, Phaser.Math.Between(0, game.scale.width), Phaser.Math.Between(0, game.scale.height-80));
+           this.physics.add.collider(myCoin, platforms);
+           Coins.push(myCoin);
+           myCoin.play('coin');
+       } 
+
+
+        for (var i = 0; i < totalghost; i++){
+          let ghost = new Ghost(this, Phaser.Math.Between(300, game.scale.width), Phaser.Math.Between(100, game.scale.height-80), 'Ghosts', 'ghost');
+          ghost.addTween(this, ghost.x+200, ghost.y, 2000);
+          Ghosts.push(ghost);
+        }
+      
+       this.physics.add.overlap(mainCharacter, Coins, takecoin, null, this);
+       this.physics.add.overlap(mainCharacter, Ghosts, takedmg, null, this);
+
+       //Set up user input
+       cursors = this.input.keyboard.createCursorKeys();
+       keys = this.input.keyboard.addKeys('A, D, SPACE');
+       space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+       space.on('down', jump); //calls jump function when space is pressed
+       
+       gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
+       gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
+        gui2.setText('Score:' + score);
+       
+    }
+
+    function createPlatforms(scene)
+    {
+        platforms = scene.physics.add.staticGroup();
+
+        //basePlatform is the floor of the game
+        let basePlatform = platforms.create(game.scale.width/2, game.scale.height-30, 'platform');
+        basePlatform.setScale(3, 1).refreshBody(); //scales the base platform in the x axis to cover the entire floor
+
+        platforms.create(value3, value2, 'platform'); //creates the upper left platform
+        platforms.create(value4, value, 'platform'); //creates the bottome right platform
+    }
+
+    function update()
+    {
+        //Player will not move in the x-axis unless a movement key is being pressed
+        mainCharacter.setVelocityX(0);
+
+        //Player has "drag" on the x-axis meaning they slide a bit after an input
+        mainCharacter.setDragX(1000);
+
+        //This will reset the number of jumps available to the player whenever the player lands
+        if (mainCharacter.body.touching.down) {
+            mainCharacter.currentJumps = 0;
+        }
+
+        //Handle player movements
+        if (cursors.left.isDown || keys.A.isDown)
+        {
+            mainCharacter.setVelocityX(-400);
+            if (mainCharacter.body.touching.down)
+              mainCharacter.play(mainCharacter.animations['left'], true);
+            mainCharacter.flipX = true;
+            if (mainCharacter.x < 0){
+              mainCharacter.x = game.scale.width-25;
+            }
+        }
+
+        else if (cursors.right.isDown || keys.D.isDown)
+        {
+            mainCharacter.setVelocityX(400);
+            if (mainCharacter.body.touching.down)
+              mainCharacter.play(mainCharacter.animations['right'], true);
+            mainCharacter.flipX = false;   
+            if (mainCharacter.x > game.scale.width){
+              mainCharacter.x = 0 + 25
+
+            }
+            
+        } 
+        else if (keys.SPACE.isDown)
+        {
+            
+            
+            mainCharacter.flipX = false;
+            }     
+        /*else if (space.on = true){
+          mainCharacter.play(mainCharacter.animations['hop'], true);
+          mainCharacter.play(mainCharacter.animations['left'], false);
+          mainCharacter.play(mainCharacter.animations['right'], false);
+          mainCharacter.play(mainCharacter.animations['idle'], false);
+
+        }*/
+        else {
+        mainCharacter.play(mainCharacter.animations['idle'], true);
+       }
+    }
+
+    function jump(event)
+    {
+        if (mainCharacter.body.touching.down) {
+          //If the player is on the ground, the player can jump
+          mainCharacter.setVelocityY(-1200);
+          mainCharacter.play(mainCharacter.animations['left'], false);
+          mainCharacter.play(mainCharacter.animations['right'], false);
+          mainCharacter.play(mainCharacter.animations['idle'], false);
+          mainCharacter.play(mainCharacter.animations['hop'], true);
+          //this.jumping_sound.play();
+          mainCharacter.currentJumps++;
+
+          scene.jumping_sound.play();
+          
+
+        } else if (mainCharacter.currentJumps < mainCharacter.totalJumps) {
+          //If the player is not on the ground but has an available air jump, use that jump
+          mainCharacter.setVelocityY(-1000);
+          mainCharacter.currentJumps++;
+          mainCharacter.play(mainCharacter.animations['hop'], true);
+          scene.jumping_sound.play();
+        }
+      }
+
+    //This function is called when a player overlaps with a carrot
+    function takecoin(mainCharacter, coin)
+    {
+        mainCharacter.collectedcoins++;
+        this.coin_sound.play();
+        coin.disableBody(true, true); //remove that particular carrot from the game (physics and visibility)
+        if (mainCharacter.collectedcoins < totalCoins)
+        {
+          gui.setText('Cha Ching!');
+          guiTimer = this.time.delayedCall(1000, removeText, [], this);
+        } else
+        {
+          gui.setText('You Win!');
+          this.win_sound.play();
+          mainCharacter.disableBody(true, false);
+          score++;
+
+
+          
+          guiTimer.remove(false);
+          this.scene.restart();﻿﻿﻿﻿
+          
+        }
+    }
+    function takedmg(mainCharacter, ghost){
+      mainCharacter.disableBody(true,true);
+      this.losing_sound.play();
+      score = 0;
+      for(var i = 0; i < platforms.length; i++){
+        platforms[i].destroy()
+      }
+      this.scene.restart();
+          }
+    
+    //Reset the gui text to be empty after the guiTimer elapses
+    function removeText()
+    {
+        if (mainCharacter.collectedcoins < totalCoins)
+        {
+            gui.setText('');            
+        }
+    }
+
+    </script>
+
+</body>
+
+</html>
+
