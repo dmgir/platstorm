@@ -94,16 +94,11 @@
             scene.physics.add.existing(this);
             this.setCollideWorldBounds(true);
             this.setGravityY(1000);
-            this.setScale(0.5)
-
+            this.setScale(0.5);
         }
     }
-<<<<<<< HEAD
         
     class Ghost extends Phaser.Physics.Arcade.Sprite
-=======
- class Ghost extends Phaser.Physics.Arcade.Sprite
->>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
     {
         constructor(scene, x, y, spritesheet, animation) 
         {
@@ -132,13 +127,11 @@
     var Ghosts = [];
     var totalghost = 4;
     var score = 0;
-<<<<<<< HEAD
+
     var playerVelocity = 400;
     var HasLightning = false;
     
-=======
     var highscore = 0;
->>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
 
     //Keyboard controls
     var cursors;
@@ -147,7 +140,7 @@
     var value2 = Phaser.Math.Between(600, 700);
     var value = Phaser.Math.Between(200, 400);
     var value3 = Phaser.Math.Between(-100, 0);
-    var value4 = Phaser.Math.Between(1, 6)
+    // var value4 = Phaser.Math.Between(1, 6)
 
     var gui3;
     var gui2;
@@ -175,6 +168,7 @@
         this.load.audio('win_sound', 'assets/game_win.wav');
         this.load.audio('jumping_sound', 'assets/jumping.wav');
         this.load.audio('losing_sound', 'assets/losing.wav');
+        this.load.audio('lightning_asset', 'assets/powerUp.wav');
 
     }
 
@@ -189,15 +183,16 @@
        this.win_sound = this.sound.add('win_sound');
        this.jumping_sound = this.sound.add('jumping_sound');
        this.losing_sound = this.sound.add('losing_sound');
+       this.lightning = this.sound.add('lightning_asset');
 
        //making the spin animation for the coins
        this.anims.create({key: 'coin', frames: this.anims.generateFrameNames('Coins', {prefix: 'coin', end: 7, zeroPad: 1}), repeat: -1});
        this.anims.create({key: 'ghost', frames: this.anims.generateFrameNames('Ghosts', {prefix: 'ghost', end: 6, zeroPad: 1}), repeat: -1});
        
-       value2 = Phaser.Math.Between(400, 500);
-     value = Phaser.Math.Between(150, 250);
-     value3 = Phaser.Math.Between(200, 800);
-     value4 = Phaser.Math.Between(200, 800);
+      value2 = Phaser.Math.Between(400, 500);
+      value = Phaser.Math.Between(150, 250);
+      value3 = Phaser.Math.Between(200, 800);
+      value4 = Phaser.Math.Between(200, 800);
 
 
        //Idle animation for the main character
@@ -217,16 +212,17 @@
 
        //Create the platforms and the player character set to collide with the platforms
        createPlatforms(this);
+
        mainCharacter = new MainCharacter(this, 50, 0, mainCharacter, mainCharacterAnimations);
        this.physics.add.collider(mainCharacter, platforms);
        mainCharacter.play(mainCharacter.animations['idle']);
         
-        for (var i = 0; i < totalLightning; i++)
-       {
-           let mylightning = new Lightning(this, Phaser.Math.Between(0, game.scale.width), Phaser.Math.Between(0, game.scale.height-80));
-           this.physics.add.collider(mylightning, platforms);
-           lightning.push(mylightning);
-       }
+      for (var i = 0; i < totalLightning; i++)
+      {
+          let mylightning = new Lightning(this, Phaser.Math.Between(0, game.scale.width), Phaser.Math.Between(0, game.scale.height-80));
+          this.physics.add.collider(mylightning, platforms);
+          lightning.push(mylightning);
+      }
 
        //Create the carrot interactables
        for (var i = 0; i < totalCoins; i++)
@@ -386,6 +382,7 @@
     function grabLightning(mainCharacter, lightning)
     {
         lightning.disableBody(true, true); //remove that particular carrot from the game (physics and visibility)
+        this.lightning.play();
         gui.setText('Cant stop the a-train!');
         guiTimer = this.time.delayedCall(1000, removeText, [], this);
         playerVelocity += 25;
