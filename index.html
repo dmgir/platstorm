@@ -206,8 +206,13 @@
         platforms = scene.physics.add.staticGroup();
 
         //basePlatform is the floor of the game
-        let basePlatform = platforms.create(game.scale.width/2, game.scale.height-30, 'platform');
-        basePlatform.setScale(3, 1).refreshBody(); //scales the base platform in the x axis to cover the entire floor
+
+        let position = 0;
+        for(let i = 0; i < 3; i++)
+        {
+          let basePlatform = platforms.create(position, game.scale.height-30, 'platform');
+          position+= 500;
+        }
 
         platforms.create(value3, value2, 'platform'); //creates the upper left platform
         platforms.create(value4, value, 'platform'); //creates the bottome right platform
