@@ -37,6 +37,10 @@
         currentJumps = 0;
         collectedcoins = 0;
         ammo = 0;
+        numBounces = 0;
+        maxBounces = 3;
+        bounceVelocity = -300;
+
         constructor(scene, x, y, spritesheet, animations)
         {
             super(scene, x, y, 'mainCharacter');
@@ -49,6 +53,21 @@
             this.setGravityY(3000); //We will set gravity *per object* rather than for the scene!
         }
     }
+
+
+    class Mushroom extends Phaser.Physics.Arcade.Sprite
+    {
+      constructor(scene, x, y)
+      {
+          super(scene, x, y, 'mushroom');
+          scene.add.existing(this);
+            scene.physics.add.existing(this);
+          this.setCollideWorldBounds(true);
+          this.setGravityY(0);
+      }
+    }
+
+
         
     class Lightning extends Phaser.Physics.Arcade.Sprite
     {
@@ -130,6 +149,7 @@
     var Ghosts = [];
     var totalghost = 4;
     var score = 0;
+    var mushrooms;
 
     var playerVelocity = 400;
     var HasLightning = false;
@@ -160,6 +180,8 @@
         this.load.image('platform', 'assets/grass_platform2.png');
         this.load.image('lightning', 'assets/lightning.png');
         
+        this.load.image('mushroom', 'assets/mushroom.png');
+
         
         this.load.atlas('Coins', 'assets/texture1.png', 'assets/texture1.json');
 
@@ -200,6 +222,8 @@
       value = Phaser.Math.Between(150, 250);
       value3 = Phaser.Math.Between(200, 800);
       value4 = Phaser.Math.Between(200, 800);
+      value5 = Phaser.Math.Between(0, 400);
+      value6 = Phaser.Math.Between(400, 800);
 
 
        //Idle animation for the main character
@@ -219,6 +243,15 @@
 
        //Create the platforms and the player character set to collide with the platforms
        createPlatforms(this);
+
+        let myMushroom = new Mushroom(this, value3, value2 - 40).setImmovable();
+        this.physics.add.collider(myMushroom, platforms);
+
+        let baseMushroom = new Mushroom(this, value5, 625).setImmovable();
+        let baseMushroom2 = new Mushroom(this, value6, 625).setImmovable();
+
+        this.physics.add.collider(baseMushroom, platforms);
+        this.physics.add.collider(baseMushroom2, platforms);
 
        mainCharacter = new MainCharacter(this, 50, 0, mainCharacter, mainCharacterAnimations);
        this.physics.add.collider(mainCharacter, platforms);
@@ -247,6 +280,9 @@
           Ghosts.push(ghost);
         }
         this.physics.add.overlap(mainCharacter, lightning, grabLightning, null, this);
+        this.physics.add.overlap(mainCharacter, myMushroom, bounce, null, this);
+        this.physics.add.overlap(mainCharacter, baseMushroom, bounce, null, this);
+        this.physics.add.overlap(mainCharacter, baseMushroom2, bounce, null, this);
        this.physics.add.overlap(mainCharacter, Coins, takecoin, null, this);
        this.physics.add.overlap(mainCharacter, Ghosts, takedmg, null, this);
        this.physics.add.overlap(lightning, Ghosts, (l, g) => {
@@ -275,6 +311,19 @@
         Ghosts.disableBody(true, true);
     } */   
         
+
+    function bounce(mainCharacter, mushrooms)
+    {   
+        if(mainCharacter.numBounces <= mainCharacter.maxBounces){
+          mainCharacter.numBounces++;
+          mainCharacter.bounceVelocity -= 300;
+          mainCharacter.setVelocityY(mainCharacter.bounceVelocity);
+      } else {
+          mainCharacter.numBounces = 0;
+          mainCharacter.bounceVelocity = -300;
+      }
+  }
+
         
     function shootProjectile() {
         console.log("projectile shot");
