@@ -58,9 +58,12 @@
             scene.add.existing(this);
             scene.physics.add.existing(this);
             this.setScale(0.5);
-            this.setCollideWorldBounds(true);
             this.setGravityY(1000);
+
+            this.setCollideWorldBounds(true);
         }
+
+        
     }
     
     class projectile extends Phaser.Physics.Arcade.Sprite
@@ -72,7 +75,6 @@
             scene.add.existing(this);
             scene.physics.add.existing(this);
             this.setScale(0.5);
-            this.setCollideWorldBounds(true);
         }
             
         startMoving(isMovingLeft) {
@@ -98,12 +100,9 @@
 
         }
     }
-<<<<<<< HEAD
+
         
     class Ghost extends Phaser.Physics.Arcade.Sprite
-=======
- class Ghost extends Phaser.Physics.Arcade.Sprite
->>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
     {
         constructor(scene, x, y, spritesheet, animation) 
         {
@@ -132,13 +131,13 @@
     var Ghosts = [];
     var totalghost = 4;
     var score = 0;
-<<<<<<< HEAD
+
     var playerVelocity = 400;
     var HasLightning = false;
     
-=======
+
     var highscore = 0;
->>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
+
 
     //Keyboard controls
     var cursors;
@@ -246,6 +245,10 @@
         this.physics.add.overlap(mainCharacter, lightning, grabLightning, null, this);
        this.physics.add.overlap(mainCharacter, Coins, takecoin, null, this);
        this.physics.add.overlap(mainCharacter, Ghosts, takedmg, null, this);
+       this.physics.add.overlap(lightning, Ghosts, (l, g) => {
+        console.log("sdsadasd")
+          l.disableBody(true, true)
+       }, null, this);
         //this.physics.add.overlap(newProjectile, Ghosts, killFunc, null, this);
 
        //Set up user input
@@ -304,6 +307,14 @@
 
         //Player has "drag" on the x-axis meaning they slide a bit after an input
         mainCharacter.setDragX(1000);
+
+        lightning.forEach((l) => {
+          console.log(l.x)
+          if(l.x < 0 || l.x > 2000) {
+
+            l.disableBody(true. true)
+          }
+        })
 
         //This will reset the number of jumps available to the player whenever the player lands
         if (mainCharacter.body.touching.down) {
@@ -381,7 +392,7 @@
         lightning.disableBody(true, true); //remove that particular carrot from the game (physics and visibility)
         gui.setText('Cant stop the a-train!');
         guiTimer = this.time.delayedCall(1000, removeText, [], this);
-        playerVelocity += 25;
+        playerVelocity += 75;
         console.log("Ammo: " + mainCharacter.ammo)
         //mainCharacter.setVelocityX()
         mainCharacter.ammo += 1
@@ -404,6 +415,7 @@
           this.win_sound.play();
           mainCharacter.disableBody(true, false);
           score++;
+          playerVelocity = 400;
 
 
           
@@ -422,12 +434,14 @@
       for(var i = 0; i < platforms.length; i++){
         platforms[i].destroy()
       }
+      playerVelocity = 400;
       this.scene.restart();
           }
     
     function Enemytakedmg(lightning, ghost){
         console.log('Enemytakedmg')
         ghost.disableBody(true, true)
+        lightning.disableBody(true, true)
     }
     
     //Reset the gui text to be empty after the guiTimer elapses
