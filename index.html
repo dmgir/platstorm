@@ -58,10 +58,10 @@
             scene.physics.add.existing(this);
             this.setCollideWorldBounds(true);
             this.setGravityY(1000);
-
+            this.setScale(0.5);
         }
     }
- class Ghost extends Phaser.Physics.Arcade.Sprite
+    class Ghost extends Phaser.Physics.Arcade.Sprite
     {
         constructor(scene, x, y, spritesheet, animation) 
         {
@@ -141,10 +141,10 @@
        this.anims.create({key: 'coin', frames: this.anims.generateFrameNames('Coins', {prefix: 'coin', end: 7, zeroPad: 1}), repeat: -1});
        this.anims.create({key: 'ghost', frames: this.anims.generateFrameNames('Ghosts', {prefix: 'ghost', end: 6, zeroPad: 1}), repeat: -1});
        
-       value2 = Phaser.Math.Between(400, 500);
-     value = Phaser.Math.Between(150, 250);
-     value3 = Phaser.Math.Between(200, 800);
-     value4 = Phaser.Math.Between(200, 800);
+      value2 = Phaser.Math.Between(400, 500);
+      value = Phaser.Math.Between(150, 250);
+      value3 = Phaser.Math.Between(200, 800);
+      value4 = Phaser.Math.Between(200, 800);
 
 
        //Idle animation for the main character
@@ -193,9 +193,9 @@
        space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
        space.on('down', jump); //calls jump function when space is pressed
        
-       gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
-       gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
-        gui2.setText('Score:' + score);
+      gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
+      gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
+      gui2.setText('Score:' + score);
        
     }
 
