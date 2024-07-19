@@ -61,6 +61,7 @@
             this.setScale(0.5);
         }
     }
+
     class Ghost extends Phaser.Physics.Arcade.Sprite
     {
         constructor(scene, x, y, spritesheet, animation) 
@@ -164,7 +165,8 @@
 
        //Create the platforms and the player character set to collide with the platforms
        createPlatforms(this);
-       mainCharacter = new MainCharacter(this, value2, value, mainCharacter, mainCharacterAnimations);
+
+       mainCharacter = new MainCharacter(this, 50, 0, mainCharacter, mainCharacterAnimations);
        this.physics.add.collider(mainCharacter, platforms);
        mainCharacter.play(mainCharacter.animations['idle']);
 
@@ -188,10 +190,10 @@
        this.physics.add.overlap(mainCharacter, Ghosts, takedmg, null, this);
 
        //Set up user input
-       cursors = this.input.keyboard.createCursorKeys();
-       keys = this.input.keyboard.addKeys('A, D, SPACE');
-       space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-       space.on('down', jump); //calls jump function when space is pressed
+      cursors = this.input.keyboard.createCursorKeys();
+      keys = this.input.keyboard.addKeys('A, D, SPACE');
+      space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      space.on('down', jump); //calls jump function when space is pressed
        
       gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
       gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
