@@ -94,11 +94,16 @@
             scene.physics.add.existing(this);
             this.setCollideWorldBounds(true);
             this.setGravityY(1000);
-            this.setScale(0.5);
+            this.setScale(0.5)
+
         }
     }
+<<<<<<< HEAD
         
     class Ghost extends Phaser.Physics.Arcade.Sprite
+=======
+ class Ghost extends Phaser.Physics.Arcade.Sprite
+>>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
     {
         constructor(scene, x, y, spritesheet, animation) 
         {
@@ -125,11 +130,15 @@
     var Coins = [];
     var totalCoins = 12;
     var Ghosts = [];
-    var totalghost = 3;
+    var totalghost = 4;
     var score = 0;
+<<<<<<< HEAD
     var playerVelocity = 400;
     var HasLightning = false;
     
+=======
+    var highscore = 0;
+>>>>>>> 037bfe98c681dc7c78af845a6a8006e16859a7eb
 
     //Keyboard controls
     var cursors;
@@ -138,8 +147,9 @@
     var value2 = Phaser.Math.Between(600, 700);
     var value = Phaser.Math.Between(200, 400);
     var value3 = Phaser.Math.Between(-100, 0);
+    var value4 = Phaser.Math.Between(1, 6)
 
-
+    var gui3;
     var gui2;
     var gui;
     var guiTimer;
@@ -184,10 +194,10 @@
        this.anims.create({key: 'coin', frames: this.anims.generateFrameNames('Coins', {prefix: 'coin', end: 7, zeroPad: 1}), repeat: -1});
        this.anims.create({key: 'ghost', frames: this.anims.generateFrameNames('Ghosts', {prefix: 'ghost', end: 6, zeroPad: 1}), repeat: -1});
        
-      value2 = Phaser.Math.Between(400, 500);
-      value = Phaser.Math.Between(150, 250);
-      value3 = Phaser.Math.Between(200, 800);
-      value4 = Phaser.Math.Between(200, 800);
+       value2 = Phaser.Math.Between(400, 500);
+     value = Phaser.Math.Between(150, 250);
+     value3 = Phaser.Math.Between(200, 800);
+     value4 = Phaser.Math.Between(200, 800);
 
 
        //Idle animation for the main character
@@ -207,7 +217,7 @@
 
        //Create the platforms and the player character set to collide with the platforms
        createPlatforms(this);
-       mainCharacter = new MainCharacter(this, value2, value, mainCharacter, mainCharacterAnimations);
+       mainCharacter = new MainCharacter(this, 50, 0, mainCharacter, mainCharacterAnimations);
        this.physics.add.collider(mainCharacter, platforms);
        mainCharacter.play(mainCharacter.animations['idle']);
         
@@ -245,9 +255,12 @@
        space.on('down', jump); //calls jump function when space is pressed
        this.input.on('pointerup', shootProjectile);
        
-      gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
-      gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
-      gui2.setText('Score:' + score);
+       gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
+       gui2 = this.add.text(900, 50, '', {fontSize: '32px', fill: '#000'});
+        gui2.setText('Score:' + score);
+        gui3 = this.add.text(900, 100, '', {fontSize: '32px', fill: '#000'});
+        gui3.setText('High Score:' + highscore);
+       
        
     }
         
@@ -402,6 +415,9 @@
     function takedmg(mainCharacter, ghost){
       mainCharacter.disableBody(true,true);
       this.losing_sound.play();
+      if (score > highscore){
+        highscore = score;
+      }
       score = 0;
       for(var i = 0; i < platforms.length; i++){
         platforms[i].destroy()
@@ -428,4 +444,3 @@
 </body>
 
 </html>
-
