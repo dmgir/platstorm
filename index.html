@@ -33,9 +33,10 @@
 
     class MainCharacter extends Phaser.Physics.Arcade.Sprite
     {
-        totalJumps = 2;
+        totalJumps = 3;
         currentJumps = 0;
         collectedcoins = 0;
+        ammo = 0;
         constructor(scene, x, y, spritesheet, animations)
         {
             super(scene, x, y, 'mainCharacter');
@@ -48,7 +49,42 @@
             this.setGravityY(3000); //We will set gravity *per object* rather than for the scene!
         }
     }
+        
+    class Lightning extends Phaser.Physics.Arcade.Sprite
+    {
+        constructor(scene, x, y)
+        {
+            super(scene, x, y, 'lightning');
+            scene.add.existing(this);
+            scene.physics.add.existing(this);
+            this.setScale(0.5);
+            this.setCollideWorldBounds(true);
+            this.setGravityY(1000);
+        }
+    }
+    
+    class projectile extends Phaser.Physics.Arcade.Sprite
+        {
+          speedX = 1300;
+          constructor(scene, x, y)
+        {
+            super(scene, x, y, 'lightning');
+            scene.add.existing(this);
+            scene.physics.add.existing(this);
+            this.setScale(0.5);
+            this.setCollideWorldBounds(true);
+        }
+            
+        startMoving(isMovingLeft) {
+            if (isMovingLeft) {
+                this.setVelocityX(-this.speedX);                
+            } else {
+                this.setVelocityX(this.speedX);                
+            }
 
+        }
+    }
+        
     class Coin extends Phaser.Physics.Arcade.Sprite
     {
         constructor(scene, x, y)
@@ -61,6 +97,7 @@
             this.setScale(0.5);
         }
     }
+        
     class Ghost extends Phaser.Physics.Arcade.Sprite
     {
         constructor(scene, x, y, spritesheet, animation) 
@@ -82,12 +119,17 @@
     //Game Objects
     var platforms;
     var mainCharacter;
+    var lightning = [];
+    var totalLightning = 7;
     var scene;
     var Coins = [];
     var totalCoins = 12;
     var Ghosts = [];
     var totalghost = 3;
     var score = 0;
+    var playerVelocity = 400;
+    var HasLightning = false;
+    
 
     //Keyboard controls
     var cursors;
@@ -106,6 +148,7 @@
     {
         this.load.image('sky', 'assets/background.png');
         this.load.image('platform', 'assets/grass_platform2.png');
+        this.load.image('lightning', 'assets/lightning.png');
         
         
         this.load.atlas('Coins', 'assets/texture1.png', 'assets/texture1.json');
@@ -167,6 +210,13 @@
        mainCharacter = new MainCharacter(this, value2, value, mainCharacter, mainCharacterAnimations);
        this.physics.add.collider(mainCharacter, platforms);
        mainCharacter.play(mainCharacter.animations['idle']);
+        
+        for (var i = 0; i < totalLightning; i++)
+       {
+           let mylightning = new Lightning(this, Phaser.Math.Between(0, game.scale.width), Phaser.Math.Between(0, game.scale.height-80));
+           this.physics.add.collider(mylightning, platforms);
+           lightning.push(mylightning);
+       }
 
        //Create the carrot interactables
        for (var i = 0; i < totalCoins; i++)
@@ -183,21 +233,44 @@
           ghost.addTween(this, ghost.x+200, ghost.y, 2000);
           Ghosts.push(ghost);
         }
-      
+        this.physics.add.overlap(mainCharacter, lightning, grabLightning, null, this);
        this.physics.add.overlap(mainCharacter, Coins, takecoin, null, this);
        this.physics.add.overlap(mainCharacter, Ghosts, takedmg, null, this);
+        //this.physics.add.overlap(newProjectile, Ghosts, killFunc, null, this);
 
        //Set up user input
        cursors = this.input.keyboard.createCursorKeys();
        keys = this.input.keyboard.addKeys('A, D, SPACE');
        space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
        space.on('down', jump); //calls jump function when space is pressed
+       this.input.on('pointerup', shootProjectile);
        
       gui = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
       gui2 = this.add.text(1000, 16, '', {fontSize: '32px', fill: '#000'});
       gui2.setText('Score:' + score);
        
     }
+        
+    /*function killFunc(newProjectile, ghost){
+        Ghosts.disableBody(true, true);
+    } */   
+        
+        
+    function shootProjectile() {
+        console.log("projectile shot");
+        // check player ammo
+        // if player has ammo, shoot
+        if (mainCharacter.ammo > 0) {
+            console.log('player has ammo')
+            var newProjectile = new projectile(scene, mainCharacter.x, mainCharacter.y)
+            mainCharacter.ammo -= 1
+            newProjectile.startMoving(mainCharacter.flipX);
+            scene.physics.add.overlap(newProjectile, Ghosts, Enemytakedmg, null, this);
+        
+        }
+        
+    }
+        
 
     function createPlatforms(scene)
     {
@@ -227,7 +300,7 @@
         //Handle player movements
         if (cursors.left.isDown || keys.A.isDown)
         {
-            mainCharacter.setVelocityX(-400);
+            mainCharacter.setVelocityX(-1*playerVelocity);
             if (mainCharacter.body.touching.down)
               mainCharacter.play(mainCharacter.animations['left'], true);
             mainCharacter.flipX = true;
@@ -238,7 +311,7 @@
 
         else if (cursors.right.isDown || keys.D.isDown)
         {
-            mainCharacter.setVelocityX(400);
+            mainCharacter.setVelocityX(playerVelocity);
             if (mainCharacter.body.touching.down)
               mainCharacter.play(mainCharacter.animations['right'], true);
             mainCharacter.flipX = false;   
@@ -289,6 +362,18 @@
           scene.jumping_sound.play();
         }
       }
+        
+    function grabLightning(mainCharacter, lightning)
+    {
+        lightning.disableBody(true, true); //remove that particular carrot from the game (physics and visibility)
+        gui.setText('Cant stop the a-train!');
+        guiTimer = this.time.delayedCall(1000, removeText, [], this);
+        playerVelocity += 25;
+        console.log("Ammo: " + mainCharacter.ammo)
+        //mainCharacter.setVelocityX()
+        mainCharacter.ammo += 1
+        console.log(mainCharacter.ammo)
+    }
 
     //This function is called when a player overlaps with a carrot
     function takecoin(mainCharacter, coin)
@@ -310,7 +395,7 @@
 
           
           guiTimer.remove(false);
-          this.scene.restart();﻿﻿﻿﻿
+          this.scene.restart();
           
         }
     }
@@ -323,6 +408,11 @@
       }
       this.scene.restart();
           }
+    
+    function Enemytakedmg(lightning, ghost){
+        console.log('Enemytakedmg')
+        ghost.disableBody(true, true)
+    }
     
     //Reset the gui text to be empty after the guiTimer elapses
     function removeText()
